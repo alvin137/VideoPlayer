@@ -1,15 +1,11 @@
 package com.github.NGoedix.watchvideo.client.gui;
 
-import com.github.NGoedix.watchvideo.VideoPlayer;
 import com.github.NGoedix.watchvideo.Reference;
+import com.github.NGoedix.watchvideo.VideoPlayerMod;
 import com.github.NGoedix.watchvideo.util.math.VideoMathUtil;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import me.srrapero720.watermedia.api.image.ImageAPI;
-import me.srrapero720.watermedia.api.image.ImageRenderer;
-import me.srrapero720.watermedia.api.math.MathAPI;
-import me.srrapero720.watermedia.api.player.SyncVideoPlayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -20,8 +16,13 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraftforge.fml.loading.FMLLoader;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
+import org.watermedia.api.image.ImageAPI;
+import org.watermedia.api.image.ImageRenderer;
+import org.watermedia.api.math.MathAPI;
+import org.watermedia.api.player.videolan.VideoPlayer;
 
 import java.awt.*;
+import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -54,7 +55,7 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
     private int optionOutSecs;
 
     // TOOLS
-    private final SyncVideoPlayer player;
+    private final VideoPlayer player;
 
     // VIDEO INFO
     int videoTexture = -1;
@@ -81,15 +82,15 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
         this.optionOutMode = -1;
         this.optionOutSecs = -1;
 
-        this.player = new SyncVideoPlayer(null, minecraft);
+        this.player = new VideoPlayer(null, minecraft);
         Reference.LOGGER.info("Playing video (" + (!controlBlocked ? "not" : "") + "blocked) (" + url + " with volume: " + (int) (Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER) * volume));
 
         player.setVolume((int) (Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER) * volume));
         if (!fadeIn) {
             started = true;
-            player.start(url);
+            player.start(URI.create(url));
         } else {
-            player.startPaused(url);
+            player.startPaused(URI.create(url));
         }
     }
 
@@ -99,7 +100,8 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
     @Override
     protected void renderBg(@NotNull GuiGraphics guiGraphics, float pPartialTick, int pMouseX, int pMouseY) {
         if (started && !closing) {
-            videoTexture = player.getGlTexture();
+            player.preRender();
+            videoTexture = player.texture();
         }
 
         // Handle easing for fade-in
@@ -150,26 +152,26 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
         // RENDER GIF
         if (!player.isPlaying() || !player.isPlaying()) {
             if (player.isPaused() && player.isPaused()) {
-                renderIcon(guiGraphics, VideoPlayer.pausedImage());
+                renderIcon(guiGraphics, VideoPlayerMod.pausedImage());
             } else {
                 renderIcon(guiGraphics, ImageAPI.loadingGif());
             }
         }
 
         // Render icons 10 and -5 seconds
-        renderStepIcon(guiGraphics, pPartialTick, true);
-        renderStepIcon(guiGraphics, pPartialTick, false);
+        //renderStepIcon(guiGraphics, pPartialTick, true);
+        //renderStepIcon(guiGraphics, pPartialTick, false);
 
         // DEBUG RENDERING
         if (!FMLLoader.isProduction()) {
-            draw(guiGraphics, String.format("State: %s", player.getRawPlayerState().name()), getHeightCenter(-12));
+            //draw(guiGraphics, String.format("State: %s", player.getRawPlayerState().name()), getHeightCenter(-12));
             draw(guiGraphics, String.format("Time: %s (%s) / %s (%s)", FORMAT.format(new Date(player.getTime())), player.getTime(), FORMAT.format(new Date(player.getDuration())), player.getDuration()), getHeightCenter(0));
             draw(guiGraphics, String.format("Media Duration: %s (%s)", FORMAT.format(new Date(player.getMediaInfoDuration())), player.getMediaInfoDuration()), getHeightCenter(12));
         }
     }
 
     private void renderTexture(GuiGraphics guiGraphics, int texture) {
-        if (player.getDimensions() == null) return; // Checking if video available
+        if (player.dimension() == null) return; // Checking if video available
 
         RenderSystem.enableBlend();
         guiGraphics.fill(0, 0, width, height, MathAPI.argb(255, 0, 0, 0));
@@ -179,7 +181,7 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
         RenderSystem.setShaderTexture(0, texture);
 
         // Get video dimensions
-        Dimension videoDimensions = player.getDimensions();
+        Dimension videoDimensions = player.dimension();
         double videoWidth = videoDimensions.getWidth();
         double videoHeight = videoDimensions.getHeight();
 
@@ -226,7 +228,7 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
     private void renderStepIcon(GuiGraphics stack, float pPartialTicks, boolean forward) {
         float alpha = forward ? fadeStep10 : fadeStep5;
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, alpha);
-        drawTexture(stack, forward ? VideoPlayer.step10Image().texture(tick) : VideoPlayer.step5Image().texture(tick), width / 2 + (forward ? 70 : -134), height / 2 - 32, 0, 0, 64, 64, 64, 64);
+        drawTexture(stack, forward ? VideoPlayerMod.step10Image().texture(tick) : VideoPlayerMod.step5Image().texture(tick), width / 2 + (forward ? 70 : -134), height / 2 - 32, 0, 0, 64, 64, 64, 64);
         if (forward) {
             fadeStep10 = Math.max(fadeStep10 - (pPartialTicks / 8), 0.0f);
         } else {

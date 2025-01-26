@@ -4,11 +4,13 @@ import com.github.NGoedix.watchvideo.util.displayers.IDisplay;
 import com.github.NGoedix.watchvideo.util.displayers.ImageDisplayer;
 import com.github.NGoedix.watchvideo.util.displayers.VideoDisplayer;
 import com.github.NGoedix.watchvideo.util.math.geo.Vec3d;
-import me.srrapero720.watermedia.api.image.ImageFetch;
-import me.srrapero720.watermedia.api.image.ImageRenderer;
+import net.minecraft.ReportedException;
+import org.watermedia.api.image.ImageFetch;
+import org.watermedia.api.image.ImageRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.sounds.SoundSource;
 
+import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -117,12 +119,13 @@ public class TextureCache {
 
     private static final class FramePictureFetcher extends ImageFetch {
         public FramePictureFetcher(TextureCache cache, String originalURL) {
-            super(originalURL);
+            super(URI.create(originalURL));
 
-            setOnSuccessCallback(imageRenderer -> Minecraft.getInstance().executeBlocking(() -> cache.process(imageRenderer)));
+            //setOnSuccessCallback(imageRenderer -> Minecraft.getInstance().executeBlocking(() -> cache.process(imageRenderer)));
+            setSuccessCallback((imageRenderer, b) -> Minecraft.getInstance().executeBlocking(() -> cache.process(imageRenderer)));
 
-            setOnFailedCallback(e -> Minecraft.getInstance().executeBlocking(() -> {
-                if (e instanceof NoPictureException) {
+            setErrorCallback((e, b) -> Minecraft.getInstance().executeBlocking(() -> {
+                if (e instanceof ReportedException) {
                     cache.processVideo();
                     return;
                 }

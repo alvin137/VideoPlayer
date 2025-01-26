@@ -1,7 +1,6 @@
 package com.github.NGoedix.watchvideo.block;
 
 import com.github.NGoedix.watchvideo.Reference;
-import com.github.NGoedix.watchvideo.VideoPlayer;
 import com.github.NGoedix.watchvideo.block.custom.HandRadioBlock;
 import com.github.NGoedix.watchvideo.block.custom.RadioBlock;
 import com.github.NGoedix.watchvideo.block.custom.TVBlock;

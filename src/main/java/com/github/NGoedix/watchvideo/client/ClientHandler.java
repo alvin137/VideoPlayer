@@ -7,18 +7,19 @@ import com.github.NGoedix.watchvideo.client.gui.RadioScreen;
 import com.github.NGoedix.watchvideo.client.gui.TVVideoScreen;
 import com.github.NGoedix.watchvideo.client.gui.VideoScreen;
 import com.github.NGoedix.watchvideo.item.custom.HandRadioItem;
-import me.srrapero720.watermedia.api.player.SyncMusicPlayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import org.watermedia.api.player.videolan.MusicPlayer;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ClientHandler {
 
-    private static final List<SyncMusicPlayer> musicPlayers = new ArrayList<>();
+    private static final List<MusicPlayer> musicPlayers = new ArrayList<>();
 
     public static void openVideo(String url, int volume, boolean isControlBlocked, boolean canSkip) {
         Minecraft.getInstance().setScreen(new VideoScreen(url, volume, isControlBlocked, canSkip, false));
@@ -29,8 +30,8 @@ public class ClientHandler {
     }
 
     public static void playMusic(String url, int volume) {
-        // Until any callback in SyncMusicPlayer I will check if the music is playing when added other music player
-        for (SyncMusicPlayer musicPlayer : musicPlayers) {
+        // Until any callback in MusicPlayer I will check if the music is playing when added other music player
+        for (MusicPlayer musicPlayer : musicPlayers) {
             if (musicPlayer.isPlaying()) {
                 musicPlayer.stop();
                 musicPlayer.release();
@@ -39,14 +40,14 @@ public class ClientHandler {
         }
 
         // Add the new player
-        SyncMusicPlayer musicPlayer = new SyncMusicPlayer();
+        MusicPlayer musicPlayer = new MusicPlayer();
         musicPlayers.add(musicPlayer);
         musicPlayer.setVolume(volume);
-        musicPlayer.start(url);
+        musicPlayer.start(URI.create(url));
     }
 
     public static void stopMusicIfPlaying() {
-        for (SyncMusicPlayer musicPlayer : musicPlayers) {
+        for (MusicPlayer musicPlayer : musicPlayers) {
             musicPlayer.stop();
             musicPlayer.release();
         }

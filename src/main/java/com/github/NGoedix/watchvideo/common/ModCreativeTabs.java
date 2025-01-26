@@ -1,7 +1,6 @@
 package com.github.NGoedix.watchvideo.common;
 
 import com.github.NGoedix.watchvideo.Reference;
-import com.github.NGoedix.watchvideo.VideoPlayer;
 import com.github.NGoedix.watchvideo.block.ModBlocks;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
